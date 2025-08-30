@@ -3,23 +3,42 @@ import { logger } from '../utils/logger.js';
 
 class PlaidService {
   constructor() {
-    const configuration = new Configuration({
-      basePath: PlaidEnvironments[process.env.PLAID_ENV || 'sandbox'],
-      baseOptions: {
-        headers: {
-          'PLAID-CLIENT-ID': process.env.PLAID_CLIENT_ID,
-          'PLAID-SECRET': process.env.PLAID_SECRET,
-        },
-      },
-    });
+    this.client = null;
+  }
 
-    this.client = new PlaidApi(configuration);
+  /**
+   * Initialize the service with environment variables
+   */
+  initialize() {
+    if (!this.client) {
+      // Check required environment variables
+      if (!process.env.PLAID_CLIENT_ID) {
+        throw new Error('PLAID_CLIENT_ID environment variable is required');
+      }
+      if (!process.env.PLAID_SECRET) {
+        throw new Error('PLAID_SECRET environment variable is required');
+      }
+
+      const configuration = new Configuration({
+        basePath: PlaidEnvironments[process.env.PLAID_ENV || 'sandbox'],
+        baseOptions: {
+          headers: {
+            'PLAID-CLIENT-ID': process.env.PLAID_CLIENT_ID,
+            'PLAID-SECRET': process.env.PLAID_SECRET,
+          },
+        },
+      });
+
+      this.client = new PlaidApi(configuration);
+      logger.info('Plaid service initialized');
+    }
   }
 
   /**
    * Exchange public token for access token
    */
   async exchangePublicToken(publicToken) {
+    this.initialize();
     try {
       const response = await this.client.itemPublicTokenExchange({
         public_token: publicToken
@@ -40,6 +59,7 @@ class PlaidService {
    * Get accounts for an item
    */
   async getAccounts(accessToken) {
+    this.initialize();
     try {
       const response = await this.client.accountsGet({
         access_token: accessToken
@@ -57,6 +77,7 @@ class PlaidService {
    * Get transactions for an item
    */
   async getTransactions(accessToken, startDate, endDate, options = {}) {
+    this.initialize();
     try {
       const response = await this.client.transactionsGet({
         access_token: accessToken,
@@ -80,6 +101,7 @@ class PlaidService {
    * Get item information
    */
   async getItem(accessToken) {
+    this.initialize();
     try {
       const response = await this.client.itemGet({
         access_token: accessToken
@@ -96,6 +118,7 @@ class PlaidService {
    * Get institution information
    */
   async getInstitution(institutionId) {
+    this.initialize();
     try {
       const response = await this.client.institutionsGetById({
         institution_id: institutionId,
@@ -116,6 +139,7 @@ class PlaidService {
    * Create link token for Plaid Link
    */
   async createLinkToken(userId, clientName = 'AutoAccountant') {
+    this.initialize();
     try {
       const response = await this.client.linkTokenCreate({
         user: { client_user_id: userId },
@@ -149,6 +173,7 @@ class PlaidService {
    * Update link token for re-authentication
    */
   async updateLinkToken(accessToken) {
+    this.initialize();
     try {
       const response = await this.client.linkTokenCreate({
         user: { client_user_id: 'user_id' }, // This should be the actual user ID
@@ -173,6 +198,7 @@ class PlaidService {
    * Get categories
    */
   async getCategories() {
+    this.initialize();
     try {
       const response = await this.client.categoriesGet({});
       return response.data.categories;

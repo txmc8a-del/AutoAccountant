@@ -2,7 +2,7 @@ import express from 'express';
 import { body, validationResult } from 'express-validator';
 import plaidService from '../services/plaidService.js';
 import sheetsService from '../services/sheetsService.js';
-import { logger } from '../../utils/logger.js';
+import { logger } from '../utils/logger.js';
 import { sendNotification } from '../services/notificationService.js';
 
 const router = express.Router();

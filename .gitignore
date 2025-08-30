@@ -65,6 +65,9 @@ webpack-assets.json
 *.crt
 *.key
 
+# Google Service Account Key File
+google-service-account.json
+
 # file uploads
 /tmp/
 /receipts/

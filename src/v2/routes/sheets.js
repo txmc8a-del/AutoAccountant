@@ -1,7 +1,7 @@
 import express from 'express';
 import { body, validationResult } from 'express-validator';
 import sheetsService from '../services/sheetsService.js';
-import { logger } from '../../utils/logger.js';
+import { logger } from '../utils/logger.js';
 
 const router = express.Router();
 

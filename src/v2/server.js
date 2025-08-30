@@ -17,6 +17,17 @@ import sheetsRoutes from './routes/sheets.js';
 // Load environment variables
 dotenv.config();
 
+// Debug: Log environment variables (remove in production)
+if (process.env.NODE_ENV !== 'production') {
+  console.log('🔧 Environment variables loaded:');
+  console.log('PLAID_CLIENT_ID:', process.env.PLAID_CLIENT_ID ? '✅ Set' : '❌ Missing');
+  console.log('PLAID_SECRET:', process.env.PLAID_SECRET ? '✅ Set' : '❌ Missing');
+  console.log('PLAID_ENV:', process.env.PLAID_ENV || '❌ Missing');
+  console.log('GOOGLE_SHEETS_SPREADSHEET_ID:', process.env.GOOGLE_SHEETS_SPREADSHEET_ID ? '✅ Set' : '❌ Missing');
+  console.log('GOOGLE_SERVICE_ACCOUNT_KEY_FILE:', process.env.GOOGLE_SERVICE_ACCOUNT_KEY_FILE ? '✅ Set' : '❌ Missing');
+  console.log('');
+}
+
 const app = express();
 const PORT = process.env.PORT || 3000;
 

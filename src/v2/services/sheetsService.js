@@ -3,19 +3,41 @@ import { logger } from '../utils/logger.js';
 
 class SheetsService {
   constructor() {
-    this.auth = new google.auth.GoogleAuth({
-      keyFile: process.env.GOOGLE_SERVICE_ACCOUNT_KEY_FILE,
-      scopes: ['https://www.googleapis.com/auth/spreadsheets']
-    });
-    
-    this.sheets = google.sheets({ version: 'v4', auth: this.auth });
-    this.spreadsheetId = process.env.GOOGLE_SHEETS_SPREADSHEET_ID;
+    this.auth = null;
+    this.sheets = null;
+    this.spreadsheetId = null;
+  }
+
+  /**
+   * Initialize the service with environment variables
+   */
+  initialize() {
+    if (!this.auth) {
+      // Check required environment variables
+      if (!process.env.GOOGLE_SERVICE_ACCOUNT_KEY_FILE) {
+        throw new Error('GOOGLE_SERVICE_ACCOUNT_KEY_FILE environment variable is required');
+      }
+      if (!process.env.GOOGLE_SHEETS_SPREADSHEET_ID) {
+        throw new Error('GOOGLE_SHEETS_SPREADSHEET_ID environment variable is required');
+      }
+
+      this.auth = new google.auth.GoogleAuth({
+        keyFile: process.env.GOOGLE_SERVICE_ACCOUNT_KEY_FILE,
+        scopes: ['https://www.googleapis.com/auth/spreadsheets']
+      });
+      
+      this.sheets = google.sheets({ version: 'v4', auth: this.auth });
+      this.spreadsheetId = process.env.GOOGLE_SHEETS_SPREADSHEET_ID;
+      
+      logger.info('Google Sheets service initialized');
+    }
   }
 
   /**
    * Initialize the spreadsheet with headers
    */
   async initializeSpreadsheet() {
+    this.initialize();
     try {
       const headers = [
         'Transaction ID',
@@ -83,6 +105,7 @@ class SheetsService {
    * Add a single transaction to the spreadsheet
    */
   async addTransaction(transaction) {
+    this.initialize();
     try {
       const row = [
         transaction.transaction_id,
@@ -126,6 +149,7 @@ class SheetsService {
    * Add multiple transactions to the spreadsheet
    */
   async addTransactions(transactions) {
+    this.initialize();
     try {
       if (!transactions || transactions.length === 0) {
         logger.info('No transactions to add');
@@ -174,6 +198,7 @@ class SheetsService {
    * Get all transactions from the spreadsheet
    */
   async getTransactions() {
+    this.initialize();
     try {
       const response = await this.sheets.spreadsheets.values.get({
         spreadsheetId: this.spreadsheetId,
@@ -219,6 +244,7 @@ class SheetsService {
    * Update a transaction's user category and notes
    */
   async updateTransactionCategory(transactionId, userCategory, userNotes) {
+    this.initialize();
     try {
       // First, find the row with this transaction ID
       const response = await this.sheets.spreadsheets.values.get({
@@ -264,6 +290,7 @@ class SheetsService {
    * Check if a transaction already exists in the spreadsheet
    */
   async transactionExists(transactionId) {
+    this.initialize();
     try {
       const response = await this.sheets.spreadsheets.values.get({
         spreadsheetId: this.spreadsheetId,
@@ -282,6 +309,7 @@ class SheetsService {
    * Get unique categories from the spreadsheet
    */
   async getUniqueCategories() {
+    this.initialize();
     try {
       const response = await this.sheets.spreadsheets.values.get({
         spreadsheetId: this.spreadsheetId,
