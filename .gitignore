@@ -58,6 +58,7 @@ typings/
 .env
 
 # webpack build files
+.next/
 public
 webpack-assets.json
 

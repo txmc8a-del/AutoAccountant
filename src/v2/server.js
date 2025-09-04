@@ -8,6 +8,7 @@ import dotenv from 'dotenv';
 import { logger } from './utils/logger.js';
 import { errorHandler } from './middleware/errorHandler.js';
 import { notFoundHandler } from './middleware/notFoundHandler.js';
+import databaseService from './services/databaseService.js';
 
 // Import routes
 import plaidRoutes from './routes/plaid.js';
@@ -25,6 +26,7 @@ if (process.env.NODE_ENV !== 'production') {
   console.log('PLAID_ENV:', process.env.PLAID_ENV || '❌ Missing');
   console.log('GOOGLE_SHEETS_SPREADSHEET_ID:', process.env.GOOGLE_SHEETS_SPREADSHEET_ID ? '✅ Set' : '❌ Missing');
   console.log('GOOGLE_SERVICE_ACCOUNT_KEY_FILE:', process.env.GOOGLE_SERVICE_ACCOUNT_KEY_FILE ? '✅ Set' : '❌ Missing');
+  console.log('MONGODB_URI:', process.env.MONGODB_URI ? '✅ Set' : '❌ Missing');
   console.log('');
 }
 
@@ -53,6 +55,9 @@ app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 // Compression middleware
 app.use(compression());
 
+// Serve static files
+app.use(express.static('src/v2/public'));
+
 // Logging middleware
 app.use(morgan('combined', {
   stream: {
@@ -79,9 +84,21 @@ app.use(notFoundHandler);
 app.use(errorHandler);
 
 // Start server
-app.listen(PORT, () => {
-  logger.info(`🚀 AutoAccountant server running on port ${PORT}`);
-  logger.info(`📊 Environment: ${process.env.NODE_ENV || 'development'}`);
-});
+const startServer = async () => {
+  try {
+    // Connect to database
+    await databaseService.connect();
+    
+    app.listen(PORT, () => {
+      logger.info(`🚀 AutoAccountant server running on port ${PORT}`);
+      logger.info(`📊 Environment: ${process.env.NODE_ENV || 'development'}`);
+    });
+  } catch (error) {
+    logger.error('Failed to start server:', error);
+    process.exit(1);
+  }
+};
+
+startServer();
 
 export default app; 

@@ -29,10 +29,11 @@ console.log('🔧 Environment variables loaded:');
 console.log('PLAID_CLIENT_ID:', process.env.PLAID_CLIENT_ID ? '✅ Set' : '❌ Missing');
 console.log('PLAID_SECRET:', process.env.PLAID_SECRET ? '✅ Set' : '❌ Missing');
 console.log('PLAID_ENV:', process.env.PLAID_ENV || '❌ Missing');
-console.log('GOOGLE_SHEETS_SPREADSHEET_ID:', process.env.GOOGLE_SHEETS_SPREADSHEET_ID ? '✅ Set' : '❌ Missing');
-console.log('GOOGLE_SERVICE_ACCOUNT_KEY_FILE:', process.env.GOOGLE_SERVICE_ACCOUNT_KEY_FILE ? '✅ Set' : '❌ Missing');
-console.log('NODE_ENV:', process.env.NODE_ENV || '❌ Missing');
-console.log('PORT:', process.env.PORT || '❌ Missing (will use default 3000)');
+  console.log('GOOGLE_SHEETS_SPREADSHEET_ID:', process.env.GOOGLE_SHEETS_SPREADSHEET_ID ? '✅ Set' : '❌ Missing');
+  console.log('GOOGLE_SERVICE_ACCOUNT_KEY_FILE:', process.env.GOOGLE_SERVICE_ACCOUNT_KEY_FILE ? '✅ Set' : '❌ Missing');
+  console.log('MONGODB_URI:', process.env.MONGODB_URI ? '✅ Set' : '❌ Missing');
+  console.log('NODE_ENV:', process.env.NODE_ENV || '❌ Missing');
+  console.log('PORT:', process.env.PORT || '❌ Missing (will use default 3000)');
 
 // Check if Google service account key file exists
 if (process.env.GOOGLE_SERVICE_ACCOUNT_KEY_FILE) {
@@ -50,7 +51,8 @@ const requiredVars = [
   'PLAID_SECRET', 
   'PLAID_ENV',
   'GOOGLE_SHEETS_SPREADSHEET_ID',
-  'GOOGLE_SERVICE_ACCOUNT_KEY_FILE'
+  'GOOGLE_SERVICE_ACCOUNT_KEY_FILE',
+  'MONGODB_URI'
 ];
 
 const missingVars = requiredVars.filter(varName => !process.env[varName]);

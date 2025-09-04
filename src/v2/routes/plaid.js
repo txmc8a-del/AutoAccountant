@@ -2,6 +2,7 @@ import express from 'express';
 import { body, validationResult } from 'express-validator';
 import plaidService from '../services/plaidService.js';
 import sheetsService from '../services/sheetsService.js';
+import itemService from '../services/itemService.js';
 import { logger } from '../utils/logger.js';
 import moment from 'moment';
 
@@ -54,12 +55,34 @@ router.post('/exchange-token', validatePublicToken, async (req, res) => {
       return res.status(400).json({ errors: errors.array() });
     }
 
-    const { public_token } = req.body;
+    const { public_token, user_id } = req.body;
+    
+    if (!user_id) {
+      return res.status(400).json({ error: 'User ID is required' });
+    }
+
     const result = await plaidService.exchangePublicToken(public_token);
+    
+    // Get item and institution information
+    const item = await plaidService.getItem(result.accessToken);
+    const institution = await plaidService.getInstitution(item.institution_id);
+    
+    // Store the item in the database
+    await itemService.storeItem(
+      result.accessToken,
+      result.itemId,
+      user_id,
+      {
+        institution_id: item.institution_id,
+        name: institution.name
+      }
+    );
     
     res.json({
       access_token: result.accessToken,
-      item_id: result.itemId
+      item_id: result.itemId,
+      institution: institution,
+      message: 'Account connected successfully'
     });
   } catch (error) {
     logger.error('Failed to exchange token:', error);
@@ -192,6 +215,49 @@ router.post('/update-link-token', validateAccessToken, async (req, res) => {
     res.json({ link_token: linkToken });
   } catch (error) {
     logger.error('Failed to create update link token:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Get user's connected accounts
+router.get('/accounts/:userId', async (req, res) => {
+  try {
+    const { userId } = req.params;
+    const items = await itemService.getItemsByUserId(userId);
+    
+    res.json({ items });
+  } catch (error) {
+    logger.error('Failed to get user accounts:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Get specific item details
+router.get('/item/:itemId', async (req, res) => {
+  try {
+    const { itemId } = req.params;
+    const item = await itemService.getItemByItemId(itemId);
+    
+    if (!item) {
+      return res.status(404).json({ error: 'Item not found' });
+    }
+    
+    res.json({ item });
+  } catch (error) {
+    logger.error('Failed to get item details:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Delete a connected account
+router.delete('/item/:itemId', async (req, res) => {
+  try {
+    const { itemId } = req.params;
+    await itemService.deleteItem(itemId);
+    
+    res.json({ message: 'Account disconnected successfully' });
+  } catch (error) {
+    logger.error('Failed to delete item:', error);
     res.status(500).json({ error: error.message });
   }
 });
