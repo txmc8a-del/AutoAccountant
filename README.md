@@ -35,6 +35,10 @@
 - Plaid API account
 - Google Cloud Project with Sheets API enabled
 - Google Service Account with Sheets permissions
+- Mongodb Server
+
+## 🛠️ Developer Tooling
+- mongosh
 
 ## 🛠️ Setup
 

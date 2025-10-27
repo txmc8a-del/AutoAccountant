@@ -19,6 +19,29 @@ export interface PlaidAccount {
   mask?: string;
 }
 
+export interface Account {
+  _id: string;
+  account_id: string;
+  item_id: string;
+  user_id: string;
+  name: string;
+  official_name?: string;
+  type: 'depository' | 'credit' | 'loan' | 'investment' | 'other';
+  subtype: string;
+  mask?: string;
+  institution_name?: string;
+  balances: {
+    available?: number;
+    current?: number;
+    limit?: number;
+    iso_currency_code: string;
+    unofficial_currency_code?: string;
+  };
+  status: 'active' | 'inactive' | 'pending' | 'error';
+  created_at: string;
+  updated_at: string;
+}
+
 export interface Transaction {
   transaction_id: string;
   account_id: string;

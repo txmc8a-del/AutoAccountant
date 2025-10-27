@@ -21,7 +21,7 @@ export default function ConnectPage() {
   const loadConnectedAccounts = async () => {
     try {
       setIsLoading(true);
-      const { items } = await plaidApi.getAccounts(userId);
+      const { items } = await plaidApi.getItems(userId);
       setConnectedAccounts(items);
     } catch (error) {
       console.error('Failed to load accounts:', error);
@@ -153,13 +153,13 @@ export default function ConnectPage() {
               </svg>
               <span className="ml-2 text-gray-600">Loading accounts...</span>
             </div>
-          ) : connectedAccounts.length === 0 ? (
+          ) : connectedAccounts?.length === 0 ? (
             <p className="text-gray-500 text-center py-8">
               No accounts connected yet. Use the button above to connect your first account.
             </p>
           ) : (
             <div className="space-y-4">
-              {connectedAccounts.map((account) => (
+              {connectedAccounts?.map((account) => (
                 <div key={account.item_id} className="flex items-center justify-between p-4 border border-gray-200 rounded-lg">
                   <div>
                     <h3 className="font-medium text-gray-900">

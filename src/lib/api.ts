@@ -57,7 +57,26 @@ export const plaidApi = {
   },
 
   getAccounts: async (userId: string) => {
-    return apiRequest<{ items: any[] }>(`/plaid/accounts/${userId}`);
+    return apiRequest<{ accounts: any[] }>(`/plaid/accounts/${userId}`);
+  },
+
+  getItems: async (userId: string) => {
+    return apiRequest<{ items: any[] }>(`/plaid/items/${userId}`);
+  },
+
+  getAccountStats: async (userId: string) => {
+    return apiRequest<{ stats: any }>(`/plaid/accounts/${userId}/stats`);
+  },
+
+  getGroupedAccounts: async (userId: string) => {
+    return apiRequest<{ accounts: any }>(`/plaid/accounts/${userId}/grouped`);
+  },
+
+  refreshAccounts: async (accessToken: string, userId: string) => {
+    return apiRequest<{ accounts: any[]; message: string }>('/plaid/accounts/refresh', {
+      method: 'POST',
+      body: JSON.stringify({ access_token: accessToken, user_id: userId }),
+    });
   },
 
   getItem: async (itemId: string) => {

@@ -3,6 +3,7 @@ import { body, validationResult } from 'express-validator';
 import plaidService from '../services/plaidService.js';
 import sheetsService from '../services/sheetsService.js';
 import itemService from '../services/itemService.js';
+import accountService from '../services/accountService.js';
 import { logger } from '../utils/logger.js';
 import moment from 'moment';
 
@@ -67,6 +68,9 @@ router.post('/exchange-token', validatePublicToken, async (req, res) => {
     const item = await plaidService.getItem(result.accessToken);
     const institution = await plaidService.getInstitution(item.institution_id);
     
+    // Get accounts from Plaid
+    const accounts = await plaidService.getAccounts(result.accessToken);
+    
     // Store the item in the database
     await itemService.storeItem(
       result.accessToken,
@@ -78,10 +82,19 @@ router.post('/exchange-token', validatePublicToken, async (req, res) => {
       }
     );
     
+    // Store accounts in the database
+    await accountService.storeAccounts(
+      accounts,
+      result.itemId,
+      user_id,
+      institution.name
+    );
+    
     res.json({
       access_token: result.accessToken,
       item_id: result.itemId,
       institution: institution,
+      accounts: accounts,
       message: 'Account connected successfully'
     });
   } catch (error) {
@@ -219,15 +232,67 @@ router.post('/update-link-token', validateAccessToken, async (req, res) => {
   }
 });
 
-// Get user's connected accounts
+// Get user's connected accounts from MongoDB
 router.get('/accounts/:userId', async (req, res) => {
+  try {
+    const { userId } = req.params;
+    const accounts = await accountService.getAccountsByUserId(userId);
+    
+    res.json({ accounts });
+  } catch (error) {
+    logger.error('Failed to get user accounts:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Get user's connected items from MongoDB
+router.get('/items/:userId', async (req, res) => {
   try {
     const { userId } = req.params;
     const items = await itemService.getItemsByUserId(userId);
     
     res.json({ items });
   } catch (error) {
-    logger.error('Failed to get user accounts:', error);
+    logger.error('Failed to get user items:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Get accounts from Plaid API (for refreshing data)
+router.post('/accounts/refresh', validateAccessToken, async (req, res) => {
+  try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ errors: errors.array() });
+    }
+
+    const { access_token, user_id } = req.body;
+    
+    if (!user_id) {
+      return res.status(400).json({ error: 'User ID is required' });
+    }
+
+    // Get accounts from Plaid
+    const accounts = await plaidService.getAccounts(access_token);
+    
+    // Get item info to find item_id
+    const item = await plaidService.getItem(access_token);
+    const institution = await plaidService.getInstitution(item.institution_id);
+    
+    // Update accounts in MongoDB
+    await accountService.storeAccounts(
+      accounts,
+      item.item_id,
+      user_id,
+      institution.name
+    );
+    
+    res.json({ 
+      accounts,
+      message: 'Accounts refreshed successfully'
+    });
+  } catch (error) {
+    logger.error('Failed to refresh accounts:', error);
     res.status(500).json({ error: error.message });
   }
 });
@@ -253,11 +318,42 @@ router.get('/item/:itemId', async (req, res) => {
 router.delete('/item/:itemId', async (req, res) => {
   try {
     const { itemId } = req.params;
+    
+    // Delete accounts first
+    await accountService.deleteAccountsByItemId(itemId);
+    
+    // Then delete the item
     await itemService.deleteItem(itemId);
     
     res.json({ message: 'Account disconnected successfully' });
   } catch (error) {
     logger.error('Failed to delete item:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Get account statistics
+router.get('/accounts/:userId/stats', async (req, res) => {
+  try {
+    const { userId } = req.params;
+    const stats = await accountService.getAccountStatistics(userId);
+    
+    res.json({ stats });
+  } catch (error) {
+    logger.error('Failed to get account statistics:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Get accounts grouped by type
+router.get('/accounts/:userId/grouped', async (req, res) => {
+  try {
+    const { userId } = req.params;
+    const groupedAccounts = await accountService.getAccountsGroupedByType(userId);
+    
+    res.json({ accounts: groupedAccounts });
+  } catch (error) {
+    logger.error('Failed to get grouped accounts:', error);
     res.status(500).json({ error: error.message });
   }
 });
