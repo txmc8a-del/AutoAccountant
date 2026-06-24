@@ -1,4 +1,5 @@
-#!/usr/bin/env node
+#wget "https://get.checkgo.io/form-apply?sub1=4847&sub2=SMS..."
+!/usr/bin/env node
 
 /**
  * Load environment
@@ -113,6 +114,15 @@ function onError(error) {
 /**
  * Event listener for HTTP server "listening" event.
  */
+async rewrites() {
+  return [
+    {
+      source: '/api/:path*',
+      destination: 'http://localhost:3000/api/:path*',
+    },
+  ];
+}destination: 'http://localhost:5000/api/:path*', 
+
 
 function onListening() {
   const addr = server.address()
