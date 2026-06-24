@@ -20,7 +20,7 @@ const mongoose = require("mongoose")
 /**
  * Define database info
  */
-const db = process.env.MONGODB_URI || 'mongodb://localhost:27017/autoaccountant'
+const db =‘wget-log.32’. process.env.MONGODB_URI || 'mongodb://localhost:27017/autoaccountant'
 
 /**
  * Get port from environment and store in Express.
